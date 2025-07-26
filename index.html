@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Siargao Tourist Spot Tracker</title>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  </head>
+
+  <body>
+    <header>
+      <h1>Siargao Tourist Spot Explorer</h1>
+      <!-- Menu Toggle Button -->
+      <div id="menuContainer">
+        <button id="menuToggleBtn">☰ Menu</button>
+        <div id="menuDropdown" class="hidden">
+          <a href="logsign.html">Login</a>
+          <a href="logsign.html">Sign Up</a>
+          <a href="#" id="logoutBtn">Logout</a>
+        </div>
+      </div>
+    </header>
+
+    <button id="toggleChecklistBtn">☰ Show Checklist</button>
+
+    <div id="progressContainer">
+      <span id="progressText">Visited 0 out of 0 spots</span>
+      <div id="progressBarBackground">
+        <div id="progressBarFill"></div>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div id="map"></div>
+
+      <div id="checklist">
+        <h3>Visited Spots</h3>
+        <ul id="spot-list"></ul>
+      </div>
+    </div>
+
+    <div id="certificate">
+      <button id="downloadPdfBtn" style="display: none">
+        📄 Download Your Certificate (PDF)
+      </button>
+      <h3>🎉 Congratulations!</h3>
+      <p>You visited all tourist spots in Siargao!</p>
+    </div>
+
+    <script>
+      const map = L.map("map").setView([9.8542, 126.0581], 10);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      const spots = [
+        { name: "Mamon Island", coords: [9.613602, 126.176197] },
+        { name: "Sugba Lagoon", coords: [9.90569, 125.89916] },
+        { name: "Hagukan Cave", coords: [10.055654, 126.052929] },
+        { name: "Coconut Trees View Deck", coords: [9.812347, 126.059665] },
+        { name: "General Luna Beach", coords: [9.787485, 126.163648] },
+        { name: "Pacifico Beach", coords: [9.944166, 126.103369] },
+        { name: "Secret Beach Siargao", coords: [9.756401, 126.116948] },
+        { name: "Caridad Beach Siargao", coords: [9.914278, 126.112943] },
+        { name: "Magkukuob Cave", coords: [9.588375, 125.924139] },
+        { name: "Tayangban Cave", coords: [9.861211, 126.062907] },
+        { name: "Taktak Falls", coords: [10.034136, 126.043409] },
+        { name: "Maya Siargao Golf", coords: [9.806022, 126.159114] },
+        { name: "Siargao Beach Club", coords: [9.785523, 126.161118] },
+        { name: "Little Hawaii", coords: [10.034106, 126.071608] },
+        { name: "Madja Spring", coords: [9.977605, 126.023454] },
+        { name: "Pagbasayan Island", coords: [9.988514, 126.0067] },
+        { name: "Del Carmen Boardwalk", coords: [9.86617, 125.975281] },
+        { name: "Alegria Beach", coords: [10.054975, 126.071205] },
+        {
+          name: "Sipan Hillside Sunrise View",
+          coords: [10.026917, 126.064241],
+        },
+        { name: "Secret Paradise Beach", coords: [10.04361, 126.043174] },
+        { name: "Laonan Island Beach", coords: [9.883632, 125.912161] },
+        {
+          name: "Maliko Hidden Lagoon Private Resort",
+          coords: [9.891965, 125.929087],
+        },
+        { name: "The Green Island Isla Verde", coords: [9.894014, 125.902674] },
+        { name: "Daku Island Beach", coords: [9.742753, 126.154888] },
+        { name: "Naked Island", coords: [9.73476, 126.125993] },
+        {
+          name: "Secret Surf Spot of the South",
+          coords: [9.74897, 126.090805],
+        },
+        { name: "Secret Lagoon", coords: [9.772285, 126.109422] },
+        { name: "Siargao Wake Park", coords: [9.802261, 126.11308] },
+        { name: "Beto Cold Spring", coords: [9.830437, 126.091199] },
+        { name: "Catangnan Sunset Bridge", coords: [9.810516, 126.155177] },
+        { name: "Cloud 9 Surfing Area", coords: [9.81405, 126.165161] },
+        { name: "Tuason Surf Spot", coords: [9.809504, 126.169719] },
+        { name: "Suhoton Cove", coords: [9.602009, 125.916272] },
+        { name: "Jellyfish Sanctuary", coords: [9.597936, 125.91688] },
+        { name: "Hidden Island Resort", coords: [9.574609, 125.934788] },
+        { name: "Corregidor Island", coords: [9.69381, 126.075663] },
+        { name: "San Miguel River", coords: [9.959013, 126.066651] },
+        { name: "Kangkangon Island", coords: [9.970245, 125.973865] },
+        { name: "Das Monument", coords: [10.061991, 126.060364] },
+        {
+          name: "DaRosa Del Mar Beach Resort and Restaurant",
+          coords: [10.058791, 126.06914],
+        },
+        { name: "Secret Mountain View Point", coords: [10.009772, 126.081426] },
+        { name: "The Marvelous Somyot Cave", coords: [9.999014, 126.081399] },
+        { name: "Mag-Aso Rock Formation", coords: [9.993322, 126.088423] },
+        { name: "Coconut Plantation", coords: [9.980532, 126.088272] },
+        { name: "Baybay Beach", coords: [9.973896, 126.09365] },
+        { name: "Pacifico Surf Spot", coords: [9.944785, 126.10524] },
+        { name: "Stairs Of Heaven", coords: [9.934665, 126.108038] },
+        { name: "Tigasao Light House", coords: [9.932349, 126.108852] },
+        {
+          name: "Tigasao Linao Lagoon Eco-Tourism",
+          coords: [9.928919, 126.108137],
+        },
+        { name: "Tigasao Coast", coords: [9.928709, 126.110621] },
+        {
+          name: "Magpopongko Rock Pools and Flats",
+          coords: [9.876923, 126.120698],
+        },
+        { name: "Magpopongko White Beach", coords: [9.87488, 126.117967] },
+        {
+          name: "River and Mountains Point of View",
+          coords: [9.931479, 125.999867],
+        },
+        { name: "Secret Waterfall", coords: [9.965899, 126.010772] },
+      ];
+
+      const defaultIcon = L.icon({
+        iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl:
+          "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+        shadowSize: [41, 41],
+      });
+
+      const greenIcon = L.icon({
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl:
+          "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+        shadowSize: [41, 41],
+      });
+
+      const visitedSpots = new Set(); // Memory-only tracking
+      const listContainer = document.getElementById("spot-list");
+      const checklist = document.getElementById("checklist");
+      const toggleChecklistBtn = document.getElementById("toggleChecklistBtn");
+      const certificate = document.getElementById("certificate");
+      const downloadBtn = document.getElementById("downloadPdfBtn");
+      const markerMap = {};
+
+      toggleChecklistBtn.addEventListener("click", () => {
+        checklist.style.display =
+          checklist.style.display === "none" ? "block" : "none";
+      });
+
+      spots.forEach((spot, index) => {
+        const marker = L.marker(spot.coords, {
+          icon: defaultIcon,
+        }).addTo(map);
+
+        marker.bindPopup(
+          `<b>${spot.name}</b><br><button onclick="markVisited(${index})">Mark as Visited</button>`
+        );
+
+        markerMap[index] = marker;
+
+        const listItem = document.createElement("li");
+        listItem.textContent = spot.name;
+        listItem.onclick = () => {
+          map.setView(spot.coords, 14);
+          marker.openPopup();
+        };
+        listContainer.appendChild(listItem);
+      });
+
+      function markVisited(index) {
+        if (!visitedSpots.has(index)) {
+          visitedSpots.add(index);
+
+          const listItems = document.querySelectorAll("#spot-list li");
+          listItems[index].classList.add("visited");
+
+          if (markerMap[index]) markerMap[index].setIcon(greenIcon);
+        }
+
+        updateProgressBar();
+
+        if (visitedSpots.size === spots.length) {
+          certificate.style.display = "block";
+          downloadBtn.style.display = "inline-block";
+        }
+      }
+
+      window.markVisited = markVisited;
+
+      function updateProgressBar() {
+        const total = spots.length;
+        const visited = visitedSpots.size;
+        const percent = (visited / total) * 100;
+
+        document.getElementById(
+          "progressText"
+        ).textContent = `Visited ${visited} out of ${total} spots`;
+        document.getElementById("progressBarFill").style.width = `${percent}%`;
+      }
+
+      // PDF certificate logic
+      downloadBtn.addEventListener("click", generateCertificate);
+
+      function generateCertificate() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+          orientation: "landscape",
+          unit: "px",
+          format: [842, 595],
+        });
+
+        const name = prompt("Enter your full name for the certificate:");
+        const completedSpots = spots
+          .map((s, i) => (visitedSpots.has(i) ? s.name : null))
+          .filter(Boolean);
+        const isComplete = completedSpots.length === spots.length;
+        const dateStr = new Date().toLocaleDateString();
+
+        doc.setDrawColor(100, 160, 100);
+        doc.setLineWidth(4);
+        doc.rect(20, 20, 802, 555);
+
+        doc.setFont("Helvetica", "bold");
+        doc.setTextColor(34, 139, 34);
+        doc.setFontSize(30);
+        doc.text(
+          "Certificate of Eco-Tourism Exploration in the Island of Siargao",
+          421,
+          80,
+          { align: "center" }
+        );
+
+        doc.setFontSize(18);
+        doc.setTextColor(50, 50, 50);
+        doc.text("This certificate is proudly awarded to", 421, 130, {
+          align: "center",
+        });
+
+        doc.setFontSize(26);
+        doc.setTextColor(0, 102, 51);
+        doc.text(name || "Tourist", 421, 170, { align: "center" });
+
+        doc.setFontSize(16);
+        doc.setTextColor(80, 80, 80);
+        const bodyText = isComplete
+          ? "For successfully visiting all major tourist spots of Siargao Island"
+          : `For exploring ${completedSpots.length} out of ${spots.length} beautiful destinations of Siargao Island.`;
+        doc.text(bodyText, 421, 210, { align: "center" });
+
+        doc.setFontSize(12);
+        doc.setTextColor(60, 60, 60);
+        const maxItems = 5;
+        const startY = 250;
+        completedSpots.slice(0, 10).forEach((spot, i) => {
+          doc.text(
+            `• ${spot}`,
+            100 + (i < maxItems ? 0 : 300),
+            startY + (i % maxItems) * 20
+          );
+        });
+
+        doc.setDrawColor(150);
+        doc.line(600, 440, 780, 440);
+        doc.setFontSize(12);
+        doc.text("Tourist Signature", 690, 455, { align: "center" });
+
+        doc.text(`Date Issued: ${dateStr}`, 100, 500);
+
+        doc.setTextColor(120);
+        doc.setFontSize(10);
+        doc.text(
+          "© 2025 Siargao Eco-Tourist Spot Tracker Web App. All rights reserved.",
+          421,
+          570,
+          {
+            align: "center",
+          }
+        );
+
+        doc.save("Siargao-Certificate.pdf");
+      }
+
+      // Logout handler
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        // Simply reload or go to login page — no data is stored
+        window.location.href = "logout.php";
+      });
+
+      // sa menu buttn function ini
+      const menuToggleBtn = document.getElementById("menuToggleBtn");
+      const menuDropdown = document.getElementById("menuDropdown");
+
+      menuToggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menuDropdown.classList.toggle("hidden");
+      });
+
+      menuDropdown.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+
+      document.addEventListener("click", () => {
+        menuDropdown.classList.add("hidden");
+      });
+
+      // Logout handler
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        // No session data to clear, just redirect
+        window.location.href = "logout.php";
+      });
+    </script>
+
+    <footer>
+      &copy; 2025 Siargao Eco-Tourist Spot Tracker Web App. All rights reserved.
+    </footer>
+  </body>
+</html>

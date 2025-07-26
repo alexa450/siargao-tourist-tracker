@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login / Sign Up - Siargao Tourist Spot</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to right, #0077cc, #00bfff);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        background: white;
+        border-radius: 12px;
+        padding: 30px 40px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      h2 {
+        text-align: center;
+        color: #0077cc;
+        margin-bottom: 20px;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+
+      input {
+        margin-bottom: 15px;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 15px;
+      }
+
+      button {
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      button:hover {
+        background-color: #005fa3;
+      }
+
+      .toggle-link {
+        margin-top: 15px;
+        text-align: center;
+        font-size: 14px;
+      }
+
+      .toggle-link a {
+        color: #0077cc;
+        text-decoration: none;
+        font-weight: bold;
+      }
+
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div id="loginForm">
+        <h2>Login</h2>
+        <form id="login">
+          <input
+            type="email"
+            name="loginEmail"
+            id="loginEmail"
+            placeholder="Email"
+            required
+          />
+          <input
+            type="password"
+            name="loginPassword"
+            id="loginPassword"
+            placeholder="Password"
+            required
+          />
+          <button type="submit">Login</button>
+        </form>
+        <div class="toggle-link">
+          Don't have an account? <a href="#" onclick="toggleForms()">Sign Up</a>
+        </div>
+      </div>
+
+      <div id="signupForm" class="hidden">
+        <h2>Sign Up</h2>
+        <form id="signup">
+          <input
+            type="text"
+            name="signupName"
+            id="signupName"
+            placeholder="Full Name"
+            required
+          />
+          <input
+            type="email"
+            name="signupEmail"
+            id="signupEmail"
+            placeholder="Email"
+            required
+          />
+          <input
+            type="password"
+            name="signupPassword"
+            id="signupPassword"
+            placeholder="Password"
+            required
+          />
+
+          <button type="submit">Sign Up</button>
+        </form>
+        <div class="toggle-link">
+          Already have an account? <a href="#" onclick="toggleForms()">Login</a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggleForms() {
+        document.getElementById("loginForm").classList.toggle("hidden");
+        document.getElementById("signupForm").classList.toggle("hidden");
+      }
+
+      document
+        .getElementById("login")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+
+          try {
+            const res = await fetch("login.php", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await res.json();
+
+            if (result.status === "success") {
+              window.location.href = "index.html"; // Replace with actual map page
+            } else {
+              alert("Login failed: " + result.message);
+            }
+          } catch (err) {
+            console.error("Login error:", err);
+            alert("Login error. Please check the server.");
+          }
+        });
+
+      document
+        .getElementById("signup")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Get input values directly for validation
+          const fullname = document.getElementById("signupName").value.trim();
+          const email = document.getElementById("signupEmail").value.trim();
+          const password = document.getElementById("signupPassword").value;
+
+          // Basic client-side validation
+          if (!fullname || !email || !password) {
+            alert("All fields are required.");
+            return;
+          }
+
+          if (password.length < 6) {
+            alert("Password must be at least 6 characters.");
+            return;
+          }
+
+          const formData = new FormData(this);
+
+          try {
+            const res = await fetch("signup.php", {
+              method: "POST",
+              body: formData,
+            });
+
+            const result = await res.json();
+
+            if (result.status === "success") {
+              alert("Signup successful! Redirecting to login...");
+              toggleForms();
+            } else {
+              alert("Signup failed: " + result.message);
+            }
+          } catch (err) {
+            console.error("Signup error:", err);
+            alert("Signup error. Please check the server.");
+          }
+        });
+    </script>
+  </body>
+</html>
